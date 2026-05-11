@@ -3,3 +3,6 @@ created main.py file in main
 created framework directory for framework
 created root.py in framework
 added boot function in root.py (initial callable)
+>>> v0.0.2
+created loop function in root.py (handle main loop)
+pondering about architecture (-_-)°°°
