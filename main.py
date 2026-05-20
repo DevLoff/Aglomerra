@@ -1,13 +1,32 @@
 import pygame
 
+pygame.init()
+
 SCREEN = pygame.display.set_mode((800, 600))
+SCREEN_RECT = SCREEN.get_rect()
 ML_run = True
 CLOCK = pygame.time.Clock()
+SPEED = 10
+FONT = pygame.font.Font("ARIAL.TTF",20)
+
+tiling = pygame.Surface(SCREEN.get_size())
+
+tile_blue = pygame.image.load("images/default_blue.png")
+tile_sky = pygame.image.load("images/default_sky.png")
+
+w,h = 100, 25
+for y in range(6*4):
+    for x in range(8):
+        if y%2 == 0:
+            tiling.blit(tile_blue, (x * w, y * h))
+        else:
+            tiling.blit(tile_sky, (x * w + 50, y * h))
+SCREEN.blit(tiling, (0,0))
 
 class Player:
     def __init__(self):
         self.image = pygame.Surface((50,50))
-        self.image.fill((255,0,0))
+        self.image.fill((0,50,255))
         self.rect = self.image.get_rect()
         self.pos = pygame.Vector2(0,0)
 
@@ -20,15 +39,23 @@ while ML_run:
         if event.type == pygame.QUIT:
             ML_run = False
     if pygame.key.get_pressed()[pygame.K_LEFT]:
-        player.pos.x -= 1
+        player.pos.x -= SPEED
     if pygame.key.get_pressed()[pygame.K_RIGHT]:
-        player.pos.x += 1
+        player.pos.x += SPEED
     if pygame.key.get_pressed()[pygame.K_UP]:
-        player.pos.y -= 1
+        player.pos.y -= SPEED
     if pygame.key.get_pressed()[pygame.K_DOWN]:
-        player.pos.y += 1
+        player.pos.y += SPEED
+
+    player.pos.x = player.pos.x % SCREEN.get_width()
+    player.pos.y = player.pos.y % SCREEN.get_height()
+
+    position = FONT.render(f"{player.pos.x}:{player.pos.y}", True, (255,0,255))
 
     SCREEN.blit(player.image, player.pos)
+    SCREEN.blit(position,(0,0))
     pygame.display.flip()
-    pygame.draw.rect(SCREEN, (0,0,0), player.rect.move(player.pos))
+    SCREEN.blit(tiling.subsurface(player.rect.move(player.pos).clip(SCREEN_RECT)), player.pos)
+    SCREEN.blit(tiling.subsurface(position.get_rect()), (0,0))
+
 pygame.quit()
