@@ -1,1 +1,3 @@
 19/05/2026 : Started anew + basics (window with a movable red square)
+20/05/2026 : Added isometric tiling + Speed parameter + Font
+21/05/2026 : Refactored player movement (from in loop to in object + normalization)

@@ -29,6 +29,15 @@ class Player:
         self.image.fill((0,50,255))
         self.rect = self.image.get_rect()
         self.pos = pygame.Vector2(0,0)
+        self.speed = 10
+
+    def move(self,inputs,clamp):
+        axis = pygame.Vector2(inputs[pygame.K_RIGHT]-inputs[pygame.K_LEFT],inputs[pygame.K_DOWN]-inputs[pygame.K_UP])
+        if axis.length() > 0:
+            axis = axis.normalize()
+        self.pos += axis * self.speed
+        self.pos.x = self.pos.x % clamp.get_width()
+        self.pos.y = self.pos.y % clamp.get_height()
 
 player = Player()
 
@@ -38,17 +47,8 @@ while ML_run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             ML_run = False
-    if pygame.key.get_pressed()[pygame.K_LEFT]:
-        player.pos.x -= SPEED
-    if pygame.key.get_pressed()[pygame.K_RIGHT]:
-        player.pos.x += SPEED
-    if pygame.key.get_pressed()[pygame.K_UP]:
-        player.pos.y -= SPEED
-    if pygame.key.get_pressed()[pygame.K_DOWN]:
-        player.pos.y += SPEED
 
-    player.pos.x = player.pos.x % SCREEN.get_width()
-    player.pos.y = player.pos.y % SCREEN.get_height()
+    player.move(pygame.key.get_pressed(),SCREEN)
 
     position = FONT.render(f"{player.pos.x}:{player.pos.y}", True, (255,0,255))
 
