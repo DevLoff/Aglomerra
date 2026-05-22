@@ -14,6 +14,16 @@ tiling = pygame.Surface(SCREEN.get_size())
 tile_blue = pygame.image.load("images/default_blue.png")
 tile_sky = pygame.image.load("images/default_sky.png")
 
+LEVEL = pygame.Surface((10000,10000))
+CAMERA = SCREEN_RECT.copy()
+
+def safe_subfill(canva,target):
+    body = canva.get_rect()
+    safe_target = target.clip(body)
+    if body.contains(safe_target):
+        return canva.subsurface(safe_target)
+    return pygame.Surface((0,0))
+
 w,h = 100, 25
 for y in range(6*4):
     for x in range(8):
@@ -21,7 +31,7 @@ for y in range(6*4):
             tiling.blit(tile_blue, (x * w, y * h))
         else:
             tiling.blit(tile_sky, (x * w + 50, y * h))
-SCREEN.blit(tiling, (0,0))
+LEVEL.blit(tiling, (0,0))
 
 class Player:
     def __init__(self):
@@ -48,14 +58,19 @@ while ML_run:
         if event.type == pygame.QUIT:
             ML_run = False
 
-    player.move(pygame.key.get_pressed(),SCREEN)
+    player.move(pygame.key.get_pressed(),LEVEL)
+
+    CAMERA = CAMERA.move(player.pos)
 
     position = FONT.render(f"{player.pos.x}:{player.pos.y}", True, (255,0,255))
 
+    SCREEN.fill((0,0,0))
+    SCREEN.blit(LEVEL.subsurface(CAMERA.clip(LEVEL.get_rect())),(0,0))
     SCREEN.blit(player.image, player.pos)
     SCREEN.blit(position,(0,0))
+
     pygame.display.flip()
-    SCREEN.blit(tiling.subsurface(player.rect.move(player.pos).clip(SCREEN_RECT)), player.pos)
-    SCREEN.blit(tiling.subsurface(position.get_rect()), (0,0))
+
+    LEVEL.blit(safe_subfill(tiling,player.rect.move(player.pos)), player.pos)
 
 pygame.quit()
