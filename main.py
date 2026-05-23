@@ -9,13 +9,10 @@ CLOCK = pygame.time.Clock()
 SPEED = 10
 FONT = pygame.font.Font("ARIAL.TTF",20)
 
-tiling = pygame.Surface(SCREEN.get_size())
+tiling = pygame.Surface((10000,10000))
 
 tile_blue = pygame.image.load("images/default_blue.png")
 tile_sky = pygame.image.load("images/default_sky.png")
-
-LEVEL = pygame.Surface((10000,10000))
-CAMERA = SCREEN_RECT.copy()
 
 def safe_subfill(canva,target):
     body = canva.get_rect()
@@ -26,12 +23,12 @@ def safe_subfill(canva,target):
 
 w,h = 100, 25
 for y in range(6*4):
-    for x in range(8):
-        if y%2 == 0:
-            tiling.blit(tile_blue, (x * w, y * h))
+    z = (1-y)//2
+    for x in range(z,8+z):
+        if x%2 == y%2:
+            tiling.blit(tile_blue, (x * w + 50 * y, y * h)) # + 50 * (y%2 == 1)
         else:
-            tiling.blit(tile_sky, (x * w + 50, y * h))
-LEVEL.blit(tiling, (0,0))
+            tiling.blit(tile_sky, (x * w + 50 * y, y * h))
 
 class Player:
     def __init__(self):
@@ -46,10 +43,40 @@ class Player:
         if axis.length() > 0:
             axis = axis.normalize()
         self.pos += axis * self.speed
-        self.pos.x = self.pos.x % clamp.get_width()
-        self.pos.y = self.pos.y % clamp.get_height()
+        self.pos.x = max(0,min(int(self.pos.x),clamp.get_width()))
+        self.pos.y = max(0,min(int(self.pos.y),clamp.get_height()))
 
 player = Player()
+
+class Camera:
+    def __init__(self,n=1):
+        size = pygame.display.get_surface().get_size()
+        self.layers = [pygame.Surface(size)] + [pygame.Surface(size,pygame.SRCALPHA) for i in range(n-1)]
+        self.rect = pygame.Rect((0,0),size)
+
+    def goto(self,x,y):
+        self.rect.move_ip(x-self.rect.center[0],y-self.rect.center[1])
+
+    def paint(self,surface,pos,layer=0):
+        self.layers[layer].blit(surface, pygame.Vector2(pos) - pygame.Vector2(self.rect.topleft))
+
+    def capture(self,surface,layer=0):
+        to_be_blited = safe_subfill(surface,self.rect)
+        print(to_be_blited.get_size())
+        self.layers[layer].blit(to_be_blited, (0,0))
+
+    def clear(self,layer=0):
+        self.layers[layer].fill((0,0,0,0))
+
+    def clear_all(self):
+        for i in range(len(self.layers)):
+            self.clear(i)
+
+    def draw(self,surface,pos):
+        for layer in self.layers:
+            surface.blit(layer,pos)
+
+CAMERA = Camera(2)
 
 while ML_run:
     CLOCK.tick(60)
@@ -58,19 +85,19 @@ while ML_run:
         if event.type == pygame.QUIT:
             ML_run = False
 
-    player.move(pygame.key.get_pressed(),LEVEL)
-
-    CAMERA = CAMERA.move(player.pos)
+    player.move(pygame.key.get_pressed(),tiling)
+    CAMERA.goto(player.pos.x,player.pos.y)
 
     position = FONT.render(f"{player.pos.x}:{player.pos.y}", True, (255,0,255))
 
-    SCREEN.fill((0,0,0))
-    SCREEN.blit(LEVEL.subsurface(CAMERA.clip(LEVEL.get_rect())),(0,0))
-    SCREEN.blit(player.image, player.pos)
+    CAMERA.paint(tiling,(0,0))
+    CAMERA.paint(player.image,player.pos,1)
+    CAMERA.draw(SCREEN,(0,0))
+
     SCREEN.blit(position,(0,0))
 
     pygame.display.flip()
 
-    LEVEL.blit(safe_subfill(tiling,player.rect.move(player.pos)), player.pos)
+    CAMERA.clear_all()
 
 pygame.quit()
