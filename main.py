@@ -38,13 +38,11 @@ class Player:
         self.pos = pygame.Vector2(0,0)
         self.speed = 10
 
-    def move(self,inputs,clamp):
+    def move(self,inputs):
         axis = pygame.Vector2(inputs[pygame.K_RIGHT]-inputs[pygame.K_LEFT],inputs[pygame.K_DOWN]-inputs[pygame.K_UP])
         if axis.length() > 0:
             axis = axis.normalize()
         self.pos += axis * self.speed
-        self.pos.x = max(0,min(int(self.pos.x),clamp.get_width()))
-        self.pos.y = max(0,min(int(self.pos.y),clamp.get_height()))
 
 player = Player()
 
@@ -85,7 +83,7 @@ while ML_run:
         if event.type == pygame.QUIT:
             ML_run = False
 
-    player.move(pygame.key.get_pressed(),tiling)
+    player.move(pygame.key.get_pressed())
     CAMERA.goto(player.pos.x,player.pos.y)
 
     position = FONT.render(f"{player.pos.x}:{player.pos.y}", True, (255,0,255))
