@@ -1,6 +1,7 @@
 DD/MM/YYYY : Message
 --------------------
-23/05/2026 : fix the issue + new tiling patern
+24/05/2026 : Added dialog system + matrix implementation for mouvement
+23/05/2026 : Fix the issue + new tiling patern
 22/05/2026 : Added camera system + 1 obvious bug pending (reg. camera)
 21/05/2026 : Refactored player movement (from in loop to in object + normalization)
 20/05/2026 : Added isometric tiling + Speed parameter + Font

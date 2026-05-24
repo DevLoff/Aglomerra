@@ -21,6 +21,12 @@ def safe_subfill(canva,target):
         return canva.subsurface(safe_target)
     return pygame.Surface((0,0))
 
+def get_axis(x_po,x_ne,y_po,y_ne):
+    axis = pygame.Vector2(x_po - x_ne, y_po - y_ne)
+    if axis.length() > 0:
+        axis = axis.normalize()
+    return axis
+
 w,h = 100, 25
 for y in range(6*4):
     z = (1-y)//2
@@ -39,17 +45,16 @@ class Player:
         self.speed = 10
 
     def move(self,inputs):
-        axis = pygame.Vector2(inputs[pygame.K_RIGHT]-inputs[pygame.K_LEFT],inputs[pygame.K_DOWN]-inputs[pygame.K_UP])
-        if axis.length() > 0:
-            axis = axis.normalize()
+        axis = get_axis(inputs[pygame.K_RIGHT],inputs[pygame.K_LEFT],inputs[pygame.K_DOWN],inputs[pygame.K_UP])
         self.pos += axis * self.speed
 
 player = Player()
+npc = Player()
 
 class Camera:
     def __init__(self,n=1):
         size = pygame.display.get_surface().get_size()
-        self.layers = [pygame.Surface(size)] + [pygame.Surface(size,pygame.SRCALPHA) for i in range(n-1)]
+        self.layers = [pygame.Surface(size)] + [pygame.Surface(size,pygame.SRCALPHA) for _ in range(n-1)]
         self.rect = pygame.Rect((0,0),size)
 
     def goto(self,x,y):
@@ -76,6 +81,21 @@ class Camera:
 
 CAMERA = Camera(2)
 
+dialogs = []
+txt_iter = 0
+txt_display = pygame.Surface((0,0))
+press_lag = False
+
+def read_dialog(txt_reg,filepath):
+    txt_reg.clear()
+    txt_reader = open(filepath, 'r')
+    for line in txt_reader.readlines():
+        txt_reg.append(line.strip())
+    txt_reader.close()
+
+#read_dialog(dialogs,"dialog.txt")
+
+
 while ML_run:
     CLOCK.tick(60)
 
@@ -83,16 +103,29 @@ while ML_run:
         if event.type == pygame.QUIT:
             ML_run = False
 
-    player.move(pygame.key.get_pressed())
+    if txt_iter < len(dialogs):
+        txt_display = FONT.render(dialogs[txt_iter], True, (255, 255, 255))
+        if pygame.key.get_pressed()[pygame.K_a]:
+            if not press_lag:
+                txt_iter += 1
+            press_lag = True
+        else:
+            press_lag = False
+    else :
+        player.move(pygame.key.get_pressed())
+
     CAMERA.goto(player.pos.x,player.pos.y)
 
     position = FONT.render(f"{player.pos.x}:{player.pos.y}", True, (255,0,255))
 
     CAMERA.paint(tiling,(0,0))
     CAMERA.paint(player.image,player.pos,1)
+    CAMERA.paint(npc.image, npc.pos, 1)
     CAMERA.draw(SCREEN,(0,0))
 
     SCREEN.blit(position,(0,0))
+    if txt_iter < len(dialogs):
+        SCREEN.blit(txt_display,SCREEN_RECT.center)
 
     pygame.display.flip()
 
