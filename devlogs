@@ -1,5 +1,7 @@
 DD/MM/YYYY : Message
 --------------------
+26/05/2026 : Completed tiling & skewed perspective
+25/05/2026 : Refactored tiling system + basis of collision
 24/05/2026 : Added dialog system + matrix implementation for mouvement
 23/05/2026 : Fix the issue + new tiling patern
 22/05/2026 : Added camera system + 1 obvious bug pending (reg. camera)

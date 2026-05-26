@@ -1,4 +1,5 @@
 import pygame
+from matrix import Matrix2
 
 pygame.init()
 
@@ -8,11 +9,6 @@ ML_run = True
 CLOCK = pygame.time.Clock()
 SPEED = 10
 FONT = pygame.font.Font("ARIAL.TTF",20)
-
-tiling = pygame.Surface((10000,10000))
-
-tile_blue = pygame.image.load("images/default_blue.png")
-tile_sky = pygame.image.load("images/default_sky.png")
 
 def safe_subfill(canva,target):
     body = canva.get_rect()
@@ -27,29 +23,51 @@ def get_axis(x_po,x_ne,y_po,y_ne):
         axis = axis.normalize()
     return axis
 
-w,h = 100, 25
-for y in range(6*4):
-    z = (1-y)//2
-    for x in range(z,8+z):
-        if x%2 == y%2:
-            tiling.blit(tile_blue, (x * w + 50 * y, y * h)) # + 50 * (y%2 == 1)
-        else:
-            tiling.blit(tile_sky, (x * w + 50 * y, y * h))
+def inside(collection,hitbox):
+    cnt = 0
+    for rect in collection:
+        for point in [hitbox.topleft,hitbox.topright,hitbox.bottomleft,hitbox.bottomright]:
+            if rect.collidepoint(point):
+                cnt += 1
+    if cnt == 4:
+        return True
+    return False
+
+tiling = pygame.Surface((10000,10000))
+
+tile_blue = pygame.image.load("images/default_blue.png")
+tile_sky = pygame.image.load("images/default_sky.png")
+
+TILESET = {
+    "blue" : tile_blue,
+    "sky" : tile_sky,
+}
+
+lvl_read = open("level.txt",'r')
+raw_level = [[[spec.strip() for spec in col.split(',')] for col in row.split(';')] for row in lvl_read.readlines()]
+lvl_read.close()
+
+BORDERS = []
+SKEW = Matrix2(1/2,-1/2,1/4,1/4)
+for y in range(len(raw_level)):
+    for x in range(len(raw_level[y])):
+        BORDERS.append(pygame.Rect(x*100,y*100,100,100))
+        for z in range(len(raw_level[y][x])):
+            tiling.blit(TILESET[raw_level[y][x][z]], SKEW.mult(pygame.Vector2(x*100,y*100)) + pygame.Vector2(500,0))
 
 class Player:
     def __init__(self):
         self.image = pygame.Surface((50,50))
         self.image.fill((0,50,255))
-        self.rect = self.image.get_rect()
-        self.pos = pygame.Vector2(0,0)
+        self.rect = pygame.Rect(0,0,50,50)
         self.speed = 10
 
-    def move(self,inputs):
-        axis = get_axis(inputs[pygame.K_RIGHT],inputs[pygame.K_LEFT],inputs[pygame.K_DOWN],inputs[pygame.K_UP])
-        self.pos += axis * self.speed
+    def move(self,inputs,borders):
+        axis = get_axis(inputs[pygame.K_RIGHT],inputs[pygame.K_LEFT],inputs[pygame.K_DOWN],inputs[pygame.K_UP]).rotate(-45) * self.speed
+        if inside(borders,self.rect.move(axis)):
+            self.rect.move_ip(axis)
 
 player = Player()
-npc = Player()
 
 class Camera:
     def __init__(self,n=1):
@@ -112,15 +130,15 @@ while ML_run:
         else:
             press_lag = False
     else :
-        player.move(pygame.key.get_pressed())
+        player.move(pygame.key.get_pressed(),BORDERS)
 
-    CAMERA.goto(player.pos.x,player.pos.y)
+    p_skewed = SKEW.mult(pygame.Vector2(player.rect.center))
+    CAMERA.goto(p_skewed.x,p_skewed.y)
 
-    position = FONT.render(f"{player.pos.x}:{player.pos.y}", True, (255,0,255))
+    position = FONT.render(f"{player.rect.center[0]}:{player.rect.center[1]}", True, (255,0,255))
 
-    CAMERA.paint(tiling,(0,0))
-    CAMERA.paint(player.image,player.pos,1)
-    CAMERA.paint(npc.image, npc.pos, 1)
+    CAMERA.paint(tiling,(-500,0))
+    CAMERA.paint(player.image,p_skewed + pygame.Vector2(25,-50),1)
     CAMERA.draw(SCREEN,(0,0))
 
     SCREEN.blit(position,(0,0))
