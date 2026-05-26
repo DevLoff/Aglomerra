@@ -33,6 +33,12 @@ def inside(collection,hitbox):
         return True
     return False
 
+def string_sum(l):
+    string = ""
+    for line in l:
+        string += line.strip()
+    return string
+
 tiling = pygame.Surface((10000,10000))
 
 tile_blue = pygame.image.load("images/default_blue.png")
@@ -44,16 +50,17 @@ TILESET = {
 }
 
 lvl_read = open("level.txt",'r')
-raw_level = [[[spec.strip() for spec in col.split(',')] for col in row.split(';')] for row in lvl_read.readlines()]
+raw_level = [item.split('|') for item in string_sum(lvl_read.readlines()).split(';')]
 lvl_read.close()
 
 BORDERS = []
 SKEW = Matrix2(1/2,-1/2,1/4,1/4)
-for y in range(len(raw_level)):
-    for x in range(len(raw_level[y])):
-        BORDERS.append(pygame.Rect(x*100,y*100,100,100))
-        for z in range(len(raw_level[y][x])):
-            tiling.blit(TILESET[raw_level[y][x][z]], SKEW.mult(pygame.Vector2(x*100,y*100)) + pygame.Vector2(500,0))
+for item in raw_level:
+    x,y = item[1].split(',')
+    BORDERS.append(pygame.Rect(int(x), int(y), 100, 100))
+    item[1] = SKEW.mult(pygame.Vector2(int(x),int(y)))
+for item in sorted(raw_level,key=lambda x: x[1].y):
+    tiling.blit(TILESET[item[0].strip()], item[1] + pygame.Vector2(5000,5000))
 
 class Player:
     def __init__(self):
@@ -64,7 +71,9 @@ class Player:
 
     def move(self,inputs,borders):
         axis = get_axis(inputs[pygame.K_RIGHT],inputs[pygame.K_LEFT],inputs[pygame.K_DOWN],inputs[pygame.K_UP]).rotate(-45) * self.speed
-        if inside(borders,self.rect.move(axis)):
+        while not inside(borders,self.rect.move(axis)) and axis.length()>=1:
+            axis *= 0.5
+        if axis.length()>=1:
             self.rect.move_ip(axis)
 
 player = Player()
@@ -137,7 +146,7 @@ while ML_run:
 
     position = FONT.render(f"{player.rect.center[0]}:{player.rect.center[1]}", True, (255,0,255))
 
-    CAMERA.paint(tiling,(-500,0))
+    CAMERA.paint(tiling,(-5000,-5000))
     CAMERA.paint(player.image,p_skewed + pygame.Vector2(25,-50),1)
     CAMERA.draw(SCREEN,(0,0))
 

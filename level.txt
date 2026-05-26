@@ -1,3 +1,4 @@
-blue;sky;blue
-sky;blue;sky
-blue;sky;blue
+                                sky|100,-100;
+                blue|000,000;   sky|100,000;      blue|200,000;
+sky|-100,100;   blue|000,100;   sky|100,100;      blue|200,100;
+                blue|000,200;   sky|100,200;      blue|200,200
