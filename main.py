@@ -10,6 +10,43 @@ CLOCK = pygame.time.Clock()
 SPEED = 10
 FONT = pygame.font.Font("ARIAL.TTF",20)
 
+class InputHandler:
+    def __init__(self):
+        self.pressed = dict()
+        self.clicked = dict()
+        self.released = dict()
+        self.comp = [self.pressed,self.clicked,self.released]
+
+    def lookup(self,key,t=0):
+        if key in self.comp[t]:
+            return self.comp[t][key]
+        return False
+
+    def btn_down(self,key):
+        self.clicked[key] = True
+        self.pressed[key] = True
+
+    def btn_up(self,key):
+        self.released[key] = True
+        self.pressed[key] = False
+
+    def update(self,events):
+        for item in self.clicked:
+            self.clicked[item] = False
+        for item in self.pressed:
+            self.released[item] = False
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                self.btn_down(event.key)
+            if event.type == pygame.KEYUP:
+                self.btn_up(event.key)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                self.btn_down(-1 * event.button)
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.btn_up(-1 * event.button)
+
+INPUTBOARD = InputHandler()
+
 def safe_subfill(canva,target):
     body = canva.get_rect()
     safe_target = target.clip(body)
@@ -39,28 +76,29 @@ def string_sum(l):
         string += line.strip()
     return string
 
-tiling = pygame.Surface((10000,10000))
-
-tile_blue = pygame.image.load("images/default_blue.png")
-tile_sky = pygame.image.load("images/default_sky.png")
-
 TILESET = {
-    "blue" : tile_blue,
-    "sky" : tile_sky,
+    "blue" : pygame.image.load("images/default_blue.png"),
+    "sky" : pygame.image.load("images/default_sky.png"),
+    "default" : pygame.image.load("images/default_tile.png")
 }
-
-lvl_read = open("level.txt",'r')
-raw_level = [item.split('|') for item in string_sum(lvl_read.readlines()).split(';')]
-lvl_read.close()
 
 BORDERS = []
 SKEW = Matrix2(1/2,-1/2,1/4,1/4)
-for item in raw_level:
-    x,y = item[1].split(',')
-    BORDERS.append(pygame.Rect(int(x), int(y), 100, 100))
-    item[1] = SKEW.mult(pygame.Vector2(int(x),int(y)))
-for item in sorted(raw_level,key=lambda x: x[1].y):
-    tiling.blit(TILESET[item[0].strip()], item[1] + pygame.Vector2(5000,5000))
+
+def load_level(filepath):
+    tiling = pygame.Surface((10000, 10000))
+    lvl_read = open(filepath, 'r')
+    raw_level = [item.split('|') for item in string_sum(lvl_read.readlines()).split(';')]
+    lvl_read.close()
+    for item in raw_level:
+        x,y = item[1].split(',')
+        BORDERS.append(pygame.Rect(int(x), int(y), 100, 100))
+        item[1] = SKEW.mult(pygame.Vector2(int(x),int(y)))
+    for item in sorted(raw_level,key=lambda x: x[1].y):
+        tiling.blit(TILESET[item[0].strip()], item[1] + pygame.Vector2(5000,5000))
+    return tiling
+
+tiling = load_level("level.txt")
 
 class Player:
     def __init__(self):
@@ -122,11 +160,15 @@ def read_dialog(txt_reg,filepath):
 
 #read_dialog(dialogs,"dialog.txt")
 
+npc_range = pygame.Rect(100,-100,100,100)
 
 while ML_run:
     CLOCK.tick(60)
 
-    for event in pygame.event.get():
+    events = pygame.event.get()
+    INPUTBOARD.update(events)
+
+    for event in events:
         if event.type == pygame.QUIT:
             ML_run = False
 
@@ -140,6 +182,9 @@ while ML_run:
             press_lag = False
     else :
         player.move(pygame.key.get_pressed(),BORDERS)
+
+    if player.rect.colliderect(npc_range) and INPUTBOARD.lookup(pygame.K_f,1):
+        print("interacted")
 
     p_skewed = SKEW.mult(pygame.Vector2(player.rect.center))
     CAMERA.goto(p_skewed.x,p_skewed.y)

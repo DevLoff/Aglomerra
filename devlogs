@@ -1,6 +1,8 @@
 DD/MM/YYYY : Message
 --------------------
+27/05/2026 : Outsourced input handling + interactible area
 26/05/2026 : Completed tiling & skewed perspective + refactored level filling
+        Week 1 : S+ (nice start)
 25/05/2026 : Refactored tiling system + basis of collision
 24/05/2026 : Added dialog system + matrix implementation for mouvement
 23/05/2026 : Fix the issue + new tiling patern
