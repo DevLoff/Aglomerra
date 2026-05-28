@@ -76,6 +76,9 @@ def string_sum(l):
         string += line.strip()
     return string
 
+def rect_goto(rect,pos):
+    rect.move_ip(pos.x-rect.center[0],pos.y-rect.center[1])
+
 TILESET = {
     "blue" : pygame.image.load("images/default_blue.png"),
     "sky" : pygame.image.load("images/default_sky.png"),
@@ -86,6 +89,7 @@ BORDERS = []
 SKEW = Matrix2(1/2,-1/2,1/4,1/4)
 
 def load_level(filepath):
+    BORDERS.clear()
     tiling = pygame.Surface((10000, 10000))
     lvl_read = open(filepath, 'r')
     raw_level = [item.split('|') for item in string_sum(lvl_read.readlines()).split(';')]
@@ -108,8 +112,8 @@ class Player:
         self.speed = 10
 
     def move(self,inputs,borders):
-        axis = get_axis(inputs[pygame.K_RIGHT],inputs[pygame.K_LEFT],inputs[pygame.K_DOWN],inputs[pygame.K_UP]).rotate(-45) * self.speed
-        while not inside(borders,self.rect.move(axis)) and axis.length()>=1:
+        axis = get_axis(inputs.lookup(pygame.K_RIGHT),inputs.lookup(pygame.K_LEFT),inputs.lookup(pygame.K_DOWN),inputs.lookup(pygame.K_UP)).rotate(-45) * self.speed
+        while not inside(borders,self.rect.move(axis)) and axis.length()>=1.0:
             axis *= 0.5
         if axis.length()>=1:
             self.rect.move_ip(axis)
@@ -160,6 +164,8 @@ def read_dialog(txt_reg,filepath):
 
 #read_dialog(dialogs,"dialog.txt")
 
+npc_image = pygame.Surface((50,50))
+npc_image.fill((255,0,0))
 npc_range = pygame.Rect(100,-100,100,100)
 
 while ML_run:
@@ -174,17 +180,19 @@ while ML_run:
 
     if txt_iter < len(dialogs):
         txt_display = FONT.render(dialogs[txt_iter], True, (255, 255, 255))
-        if pygame.key.get_pressed()[pygame.K_a]:
+        if INPUTBOARD.lookup(pygame.K_a):
             if not press_lag:
                 txt_iter += 1
             press_lag = True
         else:
             press_lag = False
     else :
-        player.move(pygame.key.get_pressed(),BORDERS)
+        player.move(INPUTBOARD,BORDERS)
 
     if player.rect.colliderect(npc_range) and INPUTBOARD.lookup(pygame.K_f,1):
         print("interacted")
+        rect_goto(player.rect,pygame.Vector2(150,150))
+        tiling = load_level("level2.txt")
 
     p_skewed = SKEW.mult(pygame.Vector2(player.rect.center))
     CAMERA.goto(p_skewed.x,p_skewed.y)
@@ -193,6 +201,7 @@ while ML_run:
 
     CAMERA.paint(tiling,(-5000,-5000))
     CAMERA.paint(player.image,p_skewed + pygame.Vector2(25,-50),1)
+    CAMERA.paint(npc_image,SKEW.mult(pygame.Vector2(npc_range.center)) + pygame.Vector2(25,-50),1)
     CAMERA.draw(SCREEN,(0,0))
 
     SCREEN.blit(position,(0,0))
