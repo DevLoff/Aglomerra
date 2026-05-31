@@ -1,5 +1,6 @@
 import pygame
 from matrix import Matrix2
+import json
 
 pygame.init()
 
@@ -101,6 +102,16 @@ def load_level(filepath):
     for item in sorted(raw_level,key=lambda x: x[1].y):
         tiling.blit(TILESET[item[0].strip()], item[1] + pygame.Vector2(5000,5000))
     return tiling
+
+def decode_level(filepath):
+    level_script = json.load(open(filepath))
+    surface = pygame.Surface(level_script["size"])
+    center = pygame.Vector2(surface.get_rect().center)
+    for block in sorted(level_script["blocks"],key=lambda x: x["coord"][1]):
+        surface.blit(TILESET[block["tag"]],pygame.Vector2(block["coord"]) + center)
+    return surface
+
+
 
 tiling = load_level("level.txt")
 

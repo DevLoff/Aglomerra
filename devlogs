@@ -1,5 +1,8 @@
 DD/MM/YYYY : Message
 --------------------
+31/05/2026 : transition to json for levels
+30/05/2026 : X
+29/05/2026 : X
 28/05/2026 : Generalized INPUTBOARD usage + level switch + npc mesh
 27/05/2026 : Outsourced input handling + interactible area
 26/05/2026 : Completed tiling & skewed perspective + refactored level filling
