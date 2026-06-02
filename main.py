@@ -86,7 +86,6 @@ TILESET = {
     "default" : pygame.image.load("images/default_tile.png")
 }
 
-BORDERS = []
 SKEW = Matrix2(1/2,-1/2,1/4,1/4)
 
 def load_level(filepath):
@@ -103,17 +102,19 @@ def load_level(filepath):
         tiling.blit(TILESET[item[0].strip()], item[1] + pygame.Vector2(5000,5000))
     return tiling
 
-def decode_level(filepath):
+def decode_level(filepath,basis):
     level_script = json.load(open(filepath))
     surface = pygame.Surface(level_script["size"])
     center = pygame.Vector2(surface.get_rect().center)
-    for block in sorted(level_script["blocks"],key=lambda x: x["coord"][1]):
-        surface.blit(TILESET[block["tag"]],pygame.Vector2(block["coord"]) + center)
-    return surface
+    area,gates = [],[]
+    for block in sorted(sorted(level_script["blocks"],key=lambda x: x["pos"][2]),key=lambda x: x["pos"][1]):
+        area.append(pygame.Rect(block["pos"][:2],(100,100)))
+        surface.blit(TILESET[block["tag"]],basis.mult(pygame.Vector2(block["pos"][:2])) + center)
+    for gate in level_script["gates"]:
+        gates.append({"level":gate["level"],"coord":pygame.Rect(gate["coord"]),"target":pygame.Vector2(gate["target"])})
+    return surface,center,area,gates
 
-
-
-tiling = load_level("level.txt")
+tiling,CENTER,BORDERS,gateways = decode_level("levels/level01",SKEW)
 
 class Player:
     def __init__(self):
@@ -175,9 +176,8 @@ def read_dialog(txt_reg,filepath):
 
 #read_dialog(dialogs,"dialog.txt")
 
-npc_image = pygame.Surface((50,50))
-npc_image.fill((255,0,0))
-npc_range = pygame.Rect(100,-100,100,100)
+pygame.mixer.music.load("musics/main01.wav")
+pygame.mixer.music.play(-1)
 
 while ML_run:
     CLOCK.tick(60)
@@ -200,19 +200,19 @@ while ML_run:
     else :
         player.move(INPUTBOARD,BORDERS)
 
-    if player.rect.colliderect(npc_range) and INPUTBOARD.lookup(pygame.K_f,1):
-        print("interacted")
-        rect_goto(player.rect,pygame.Vector2(150,150))
-        tiling = load_level("level2.txt")
+    for gate in gateways:
+        if player.rect.colliderect(gate["coord"]):
+            rect_goto(player.rect, gate["target"])
+            tiling, CENTER, BORDERS, gateways = decode_level(gate["level"], SKEW)
+            break
 
     p_skewed = SKEW.mult(pygame.Vector2(player.rect.center))
     CAMERA.goto(p_skewed.x,p_skewed.y)
 
     position = FONT.render(f"{player.rect.center[0]}:{player.rect.center[1]}", True, (255,0,255))
 
-    CAMERA.paint(tiling,(-5000,-5000))
+    CAMERA.paint(tiling,-CENTER)
     CAMERA.paint(player.image,p_skewed + pygame.Vector2(25,-50),1)
-    CAMERA.paint(npc_image,SKEW.mult(pygame.Vector2(npc_range.center)) + pygame.Vector2(25,-50),1)
     CAMERA.draw(SCREEN,(0,0))
 
     SCREEN.blit(position,(0,0))
