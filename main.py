@@ -122,13 +122,23 @@ class Player:
         self.image.fill((0,50,255))
         self.rect = pygame.Rect(0,0,50,50)
         self.speed = 10
+        self.action = None
 
     def move(self,inputs,borders):
-        axis = get_axis(inputs.lookup(pygame.K_RIGHT),inputs.lookup(pygame.K_LEFT),inputs.lookup(pygame.K_DOWN),inputs.lookup(pygame.K_UP)).rotate(-45) * self.speed
-        while not inside(borders,self.rect.move(axis)) and axis.length()>=1.0:
-            axis *= 0.5
-        if axis.length()>=1:
-            self.rect.move_ip(axis)
+        if self.action is None:
+            axis = get_axis(inputs.lookup(pygame.K_RIGHT),inputs.lookup(pygame.K_LEFT),inputs.lookup(pygame.K_DOWN),inputs.lookup(pygame.K_UP)).rotate(-45) * self.speed
+            self.action = ["walk",1,axis]
+
+    def update(self,borders):
+        if self.action is not None:
+            step = self.action[2].normalize()
+            for p in range(round(self.action[2].length())):
+                if inside(borders,self.rect.move(step)):
+                    self.rect.move_ip(step)
+
+            self.action[1] -= 1
+            if self.action[1] < 1:
+                self.action = None
 
 player = Player()
 
@@ -199,6 +209,8 @@ while ML_run:
             press_lag = False
     else :
         player.move(INPUTBOARD,BORDERS)
+
+    player.update()
 
     for gate in gateways:
         if player.rect.colliderect(gate["coord"]):
