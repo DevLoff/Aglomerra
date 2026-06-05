@@ -21,11 +21,12 @@ class Level:
         self.surface = pygame.Surface(level_script["size"])
         self.center = pygame.Vector2(self.surface.get_rect().center)
         self.area, self.gates = [], []
-        for block in sorted(level_script["blocks"], key=lambda b: basis.mult(pygame.Vector2(b["pos"][:2])).y):
-            self.area.append(pygame.Rect(block["pos"][:2], (100, 100)))
-            self.surface.blit(TILESET[block["tag"]], basis.mult(pygame.Vector2(block["pos"][:2])) + self.center)
         for gate in level_script["gates"]:
             self.gates.append(Gate(gate["level"], gate["coord"], gate["target"]))
+        self.landscape = [b for b in sorted(level_script["blocks"], key=lambda b: basis.mult(pygame.Vector2(b["pos"][:2])).y)]
+        for block in self.landscape:
+            self.area.append(pygame.Rect(block["pos"][:2], (100, 100)))
+            self.surface.blit(TILESET[block["tag"]], basis.mult(pygame.Vector2(block["pos"][:2])) + self.center)
 
     def hit_tp(self, char:Player) -> Gate|None:
         for gate in self.gates:
@@ -43,3 +44,13 @@ class Level:
         char.justTP = True
         rect_goto(char.rect,pinpoint.pinpoint)
         return Level(pinpoint.level,self.basis)
+
+    def save(self,filepath:str) -> None:
+        json.dump(
+            {
+                "size": self.surface.get_size(),
+                "blocks":self.landscape,
+                "gates":[gate.save() for gate in self.gates]
+            },
+            open(filepath,'w')
+        )

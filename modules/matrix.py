@@ -12,3 +12,16 @@ class Matrix2:
             self.a * vector.x + self.b * vector.y,
             self.c * vector.x + self.d * vector.y,
         )
+
+    def det(self):
+        return self.a * self.d - self.b * self.c
+
+    def inv(self):
+        coef = self.det()
+        assert coef != 0, "Cannot invert matrix"
+        return Matrix2(
+            self.d / coef,
+            - self.b / coef,
+            - self.c / coef,
+            self.a / coef,
+        )

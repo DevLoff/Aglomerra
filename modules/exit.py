@@ -12,3 +12,10 @@ class Gate:
         if char.rect.colliderect(self.hitbox):
             return True
         return False
+
+    def save(self) -> dict:
+        return {
+            "level":self.level,
+            "coord":list(self.hitbox),
+            "target":list(self.pinpoint),
+        }
