@@ -1,5 +1,7 @@
 DD/MM/YYYY : Message
 --------------------
+07/06/2026 : started hitbox framework
+06/06/2026 : X
 05/06/2026 : saving level class to json + matrix inversion
 04/06/2026 : reworked & cleaned the code
 03/06/2026 : designing combat balance
