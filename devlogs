@@ -1,5 +1,6 @@
 DD/MM/YYYY : Message
 --------------------
+08/06/2026 : hitbox/hurtbox collision aperture
 07/06/2026 : started hitbox framework
 06/06/2026 : X
 05/06/2026 : saving level class to json + matrix inversion

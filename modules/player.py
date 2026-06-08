@@ -34,8 +34,15 @@ class Player:
     def move(self,frame):
         if self.action is None:
             self.action = frame
+            self.adjust()
 
     def update(self) -> None:
         if self.action is not None:
             self.rect.move_ip(self.action.diff)
             self.action = self.action.next
+            self.adjust()
+
+    def adjust(self):
+        if self.action is not None:
+            for box in self.action.hitbox + self.action.hurtbox:
+                box.pos += self.rect.topleft

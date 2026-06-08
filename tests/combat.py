@@ -19,6 +19,9 @@ CAMERA = Camera(1)
 
 player = Player()
 
+npc = Player()
+npc.rect.move_ip((100,100))
+
 running = True
 while running:
 
@@ -31,30 +34,55 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+    # PLAYER
+
+    player.update()
+
+    premove = get_axis_l([
+        INPUTS.lookup(key) for key in [pygame.K_d, pygame.K_q, pygame.K_s, pygame.K_z]
+    ])
+
     if INPUTS.lookup(-1):
-        frame = Frame((0,0))
+        frame = Frame(premove*2)
         cur = frame
-        for _ in range(10):
+        for _ in range(30):
             cur.hitbox.append(Hitbox((0,0),20))
-            cur.next = Frame((0,0))
+            cur.hurtbox.append(Hitbox((0, 10), 10))
+            cur.draw()
+            cur.next = Frame(premove*2)
             cur = cur.next
         player.move(frame)
 
-    premove = get_axis_l([
-            INPUTS.lookup(key) for key in [pygame.K_d, pygame.K_q, pygame.K_s, pygame.K_z]
-    ]) * 10
-    if premove.length() > 0:
-        player.move(Frame(premove))
+    player.move(Frame(premove * 10))
 
-    player.update()
+    # NPC
+
+    npc.update()
+    frame = Frame((0,0))
+    frame.hitbox.append(Hitbox((25,25), 40))
+    frame.draw()
+    npc.move(frame)
+
+    # COLLISION
+
+    if player.action is not None and npc.action is not None:
+        for urbox in player.action.hurtbox:
+            for ibox in npc.action.hitbox:
+                if urbox.collide(ibox):
+                    print("hit")
+
+    # DISPLAY
 
     CAMERA.clear_all()
 
     CAMERA.paint(player.image, player.rect.topleft)
     if player.action is not None:
-        debugTex = player.action.tex()
-        if debugTex is not None:
-            CAMERA.paint(debugTex[0], player.rect.topleft-debugTex[1])
+        if player.action.texture is not None:
+            CAMERA.paint(player.action.texture, player.rect.topleft-player.action.offset)
+
+    CAMERA.paint(npc.image, npc.rect.topleft)
+    if npc.action.texture is not None:
+        CAMERA.paint(npc.action.texture, npc.rect.topleft - npc.action.offset)
 
     CAMERA.draw(SCREEN,(0,0))
     pygame.display.flip()

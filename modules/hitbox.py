@@ -23,6 +23,10 @@ class Frame:
         self.hitbox : list[Hitbox] = []
         self.hurtbox: list[Hitbox] = []
         self.next = None
+        self.texture, self.offset = None, None
+
+    def draw(self):
+        self.texture, self.offset = self.tex()
 
     def tex(self):
         comb = self.hitbox + self.hurtbox
@@ -39,4 +43,4 @@ class Frame:
             for box in self.hurtbox:
                 pygame.draw.circle(tex,(255,0,0,100),box.pos+posOff,box.radius)
             return tex,posOff
-        return None
+        return None, None
