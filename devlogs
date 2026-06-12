@@ -1,5 +1,10 @@
 DD/MM/YYYY : Message
 --------------------
+12/06/2026 : rewrote combat.py into node hierachy paradigm
+11/06/2026 : X
+10/06/2026 : X
+09/06/2026 : X
+        Week 3 : S (alright fighting 'n hitbox)
 08/06/2026 : hitbox/hurtbox collision aperture
 07/06/2026 : started hitbox framework
 06/06/2026 : X
